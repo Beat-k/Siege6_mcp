@@ -10,7 +10,7 @@ A comprehensive audio reference system for Rainbow Six Siege that provides insta
 2. Install dependencies: `npm install`
 3. Start the app: `npm start`
 4. The app runs in the background
-5. Press `Ctrl+Shift+A` during gameplay to instantly access audio references
+5. Press `Ctrl+Alt+A` during gameplay to instantly access audio references
 6. The reference window appears instantly with search functionality
 7. Press the hotkey again or click outside to hide
 
@@ -33,7 +33,7 @@ An MCP (Model Context Protocol) server that provides tools for Rainbow Six Siege
 
 The desktop application provides true in-game performance benefits:
 
-- **Global Hotkey**: `Ctrl+Shift+A` to show/hide instantly
+- **Global Hotkey**: `Ctrl+Alt+A` to show/hide instantly
 - **System Tray**: Runs in background, no taskbar clutter
 - **Quick Search**: Type to filter operators/maps instantly
 - **Always-on-Top**: Stays visible when you need it
