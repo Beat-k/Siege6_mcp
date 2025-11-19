@@ -128,19 +128,13 @@ function createWindow() {
 }
 
 function showWindow() {
-  console.log('showWindow called');
   if (mainWindow && !mainWindow.isDestroyed()) {
-    console.log('Window exists and is not destroyed');
     if (mainWindow.isVisible()) {
-      console.log('Window is visible, hiding it');
       mainWindow.hide();
     } else {
-      console.log('Window is hidden, showing it');
       mainWindow.show();
       mainWindow.focus();
     }
-  } else {
-    console.log('Window does not exist or is destroyed');
   }
 }
 
@@ -148,16 +142,9 @@ app.whenReady().then(() => {
   createWindow();
 
   // Register global hotkey (Ctrl+Alt+A)
-  const success = globalShortcut.register('CommandOrControl+Alt+A', () => {
-    console.log('Hotkey pressed! Showing window...');
+  globalShortcut.register('CommandOrControl+Alt+A', () => {
     showWindow();
   });
-
-  if (success) {
-    console.log('Global hotkey Ctrl+Alt+A registered successfully');
-  } else {
-    console.log('Failed to register global hotkey Ctrl+Alt+A');
-  }
 
   // IPC handlers
   ipcMain.handle('get-operators', () => operators);
