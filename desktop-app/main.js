@@ -111,7 +111,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 600,
     height: 400,
-    show: false, // Back to false for production
+    show: false,
     frame: false,
     alwaysOnTop: true,
     webPreferences: {
@@ -123,7 +123,12 @@ function createWindow() {
   mainWindow.loadFile('index.html');
 
   mainWindow.on('blur', () => {
-    mainWindow.hide();
+    // Delay hiding to prevent immediate hide when window gains focus
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isFocused()) {
+        mainWindow.hide();
+      }
+    }, 100);
   });
 }
 
@@ -135,6 +140,8 @@ function showWindow() {
       mainWindow.show();
       mainWindow.focus();
     }
+  } else {
+    createWindow();
   }
 }
 

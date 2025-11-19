@@ -20,6 +20,19 @@ A comprehensive audio reference system for Rainbow Six Siege that provides insta
 
 An MCP (Model Context Protocol) server that provides tools for Rainbow Six Siege game data, specifically focused on footsteps and spatial background sounds.
 
+#### TypeScript Version (Original)
+
+```bash
+npm start
+```
+
+#### Python Version (Alternative)
+
+```bash
+pip install -r requirements.txt
+python siege6_mcp.py
+```
+
 ## Features
 
 - **Operator Footsteps**: Get detailed information about operator footsteps sounds in Rainbow Six Siege
@@ -69,12 +82,25 @@ The server will run on stdio and listen for MCP protocol messages.
 
 To use this MCP server with Claude Desktop, add the following to your `claude_desktop_config.json`:
 
+### TypeScript Version
 ```json
 {
   "mcpServers": {
     "siege6-mcp": {
       "command": "node",
       "args": ["path/to/your/project/dist/index.js"]
+    }
+  }
+}
+```
+
+### Python Version
+```json
+{
+  "mcpServers": {
+    "siege6-mcp": {
+      "command": "python",
+      "args": ["path/to/your/project/siege6_mcp.py"]
     }
   }
 }
@@ -112,6 +138,35 @@ Returns information about spatial background sounds on a specific map.
 }
 ```
 
+### list_operators (Python version only)
+
+Returns a list of all available operators.
+
+**Returns:** Comma-separated list of operator names
+
+### list_maps (Python version only)
+
+Returns a list of all available maps.
+
+**Returns:** Comma-separated list of map names
+
+### list_operators (Python version only)
+
+Returns a list of all available operators.
+
+**Returns:** Comma-separated list of operator names
+
+### list_maps (Python version only)
+
+Returns a list of all available maps.
+
+**Returns:** Comma-separated list of map names
+```json
+{
+  "map": "Bank"
+}
+```
+
 ## Data
 
 The server includes hardcoded data for all Rainbow Six Siege operators and maps. In a production environment, this could be extended to fetch real-time data from game APIs or databases.
@@ -124,6 +179,12 @@ The server includes hardcoded data for all Rainbow Six Siege operators and maps.
 
 ## Requirements
 
+### TypeScript Version
 - Node.js >= 18
 - TypeScript
 - @modelcontextprotocol/sdk
+
+### Python Version
+- Python >= 3.8
+- mcp package
+- See `requirements.txt` for dependencies
