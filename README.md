@@ -1,4 +1,22 @@
-# Siege6 MCP Server
+# Siege6 Audio Reference
+
+A comprehensive audio reference system for Rainbow Six Siege that provides instant access to operator footsteps and map spatial sounds during gameplay.
+
+## 🚀 Quick Start
+
+### Desktop App (Recommended for In-Game Use)
+
+1. Navigate to the `desktop-app` folder
+2. Install dependencies: `npm install`
+3. Start the app: `npm start`
+4. The app runs in the background
+5. Press `Ctrl+Shift+S` during gameplay to instantly access audio references
+6. The reference window appears instantly with search functionality
+7. Press the hotkey again or click outside to hide
+
+**Status**: ✅ Working - No freezing, global hotkey functional, search enabled
+
+### MCP Server (For AI Integration)
 
 An MCP (Model Context Protocol) server that provides tools for Rainbow Six Siege game data, specifically focused on footsteps and spatial background sounds.
 
@@ -6,6 +24,36 @@ An MCP (Model Context Protocol) server that provides tools for Rainbow Six Siege
 
 - **Operator Footsteps**: Get detailed information about operator footsteps sounds in Rainbow Six Siege
 - **Map Spatial Sounds**: Retrieve information about spatial background sounds on different maps
+- **In-Game Access**: Desktop app with global hotkey for instant reference during matches
+- **System Tray**: Minimizes to tray for zero distraction
+- **Quick Search**: Filter operators and maps instantly
+- **Always-on-Top**: Window stays visible when activated
+
+## Desktop App Usage
+
+The desktop application provides true in-game performance benefits:
+
+- **Global Hotkey**: `Ctrl+Shift+S` to show/hide instantly
+- **System Tray**: Runs in background, no taskbar clutter
+- **Quick Search**: Type to filter operators/maps instantly
+- **Always-on-Top**: Stays visible when you need it
+- **Click to Hide**: Click outside or press hotkey again to hide
+
+### Installation
+
+```bash
+cd desktop-app
+npm install
+npm start
+```
+
+### Building for Distribution
+
+```bash
+npm run dist
+```
+
+This creates executable files in the `dist` folder for Windows, macOS, and Linux.
 
 ## Usage
 

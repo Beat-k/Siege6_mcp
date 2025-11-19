@@ -1,0 +1,8 @@
+# This is a placeholder for the app icon
+# You'll need to add a proper icon.png file (256x256 recommended)
+# You can create one using tools like:
+# - https://favicon.io/favicon-generator/
+# - GIMP, Photoshop, or any image editor
+# - Convert to PNG format
+
+# For now, the app will work without an icon but show a default one
