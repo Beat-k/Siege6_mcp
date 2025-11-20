@@ -9,7 +9,7 @@ import sys
 from typing import Any, Sequence
 from mcp import Tool
 from mcp.server import Server
-from mcp.types import TextContent, PromptMessage
+from mcp.types import TextContent, PromptMessage, ListToolsRequest, CallToolRequest
 
 # Initialize the server
 server = Server("siege6-mcp")
@@ -120,59 +120,83 @@ MAP_SPATIAL_SOUNDS = {
     "Yacht": "Boat with water lapping, wind, engine hum, and maritime environment"
 }
 
-@server.tool()
-async def get_operator_footsteps(operator: str) -> str:
-    """
-    Get information about operator footsteps sounds in Rainbow Six Siege.
+@server.list_tools()
+async def list_tools() -> list[Tool]:
+    """List available tools."""
+    return [
+        Tool(
+            name="get_operator_footsteps",
+            description="Get information about operator footsteps sounds in Rainbow Six Siege",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "description": "Name of the operator (e.g., 'Ash', 'Thermite')"
+                    }
+                },
+                "required": ["operator"]
+            }
+        ),
+        Tool(
+            name="get_map_spatial_sounds",
+            description="Get information about spatial background sounds on a map",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "map": {
+                        "type": "string",
+                        "description": "Name of the map (e.g., 'Bank', 'Clubhouse')"
+                    }
+                },
+                "required": ["map"]
+            }
+        ),
+        Tool(
+            name="list_operators",
+            description="Get a list of all available operators",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        ),
+        Tool(
+            name="list_maps",
+            description="Get a list of all available maps",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        )
+    ]
 
-    Args:
-        operator: Name of the operator (e.g., "Ash", "Thermite")
-
-    Returns:
-        Detailed description of the operator's footsteps sounds
-    """
-    result = OPERATOR_FOOTSTEPS.get(operator)
-    if result:
-        return f"Operator {operator}: {result}"
+@server.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    """Handle tool calls."""
+    if name == "get_operator_footsteps":
+        operator = arguments.get("operator")
+        result = OPERATOR_FOOTSTEPS.get(operator)
+        if result:
+            return [TextContent(type="text", text=f"Operator {operator}: {result}")]
+        else:
+            return [TextContent(type="text", text=f"No footsteps data available for operator: {operator}")]
+    
+    elif name == "get_map_spatial_sounds":
+        map_name = arguments.get("map")
+        result = MAP_SPATIAL_SOUNDS.get(map_name)
+        if result:
+            return [TextContent(type="text", text=f"Map {map_name}: {result}")]
+        else:
+            return [TextContent(type="text", text=f"No spatial sound data available for map: {map_name}")]
+    
+    elif name == "list_operators":
+        return [TextContent(type="text", text=", ".join(sorted(OPERATOR_FOOTSTEPS.keys())))]
+    
+    elif name == "list_maps":
+        return [TextContent(type="text", text=", ".join(sorted(MAP_SPATIAL_SOUNDS.keys())))]
+    
     else:
-        return f"No footsteps data available for operator: {operator}"
-
-@server.tool()
-async def get_map_spatial_sounds(map_name: str) -> str:
-    """
-    Get information about spatial background sounds on a map.
-
-    Args:
-        map_name: Name of the map (e.g., "Bank", "Clubhouse")
-
-    Returns:
-        Detailed description of the map's spatial background sounds
-    """
-    result = MAP_SPATIAL_SOUNDS.get(map_name)
-    if result:
-        return f"Map {map_name}: {result}"
-    else:
-        return f"No spatial sound data available for map: {map_name}"
-
-@server.tool()
-async def list_operators() -> str:
-    """
-    Get a list of all available operators.
-
-    Returns:
-        Comma-separated list of all operator names
-    """
-    return ", ".join(sorted(OPERATOR_FOOTSTEPS.keys()))
-
-@server.tool()
-async def list_maps() -> str:
-    """
-    Get a list of all available maps.
-
-    Returns:
-        Comma-separated list of all map names
-    """
-    return ", ".join(sorted(MAP_SPATIAL_SOUNDS.keys()))
+        raise ValueError(f"Unknown tool: {name}")
 
 async def main():
     """Main entry point for the MCP server."""

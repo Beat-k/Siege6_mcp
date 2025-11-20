@@ -146,8 +146,8 @@
         </div>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('operators')">Operators</div>
-            <div class="tab" onclick="switchTab('maps')">Maps</div>
+            <div class="tab active" onclick="switchTab('operators', event)">Operators</div>
+            <div class="tab" onclick="switchTab('maps', event)">Maps</div>
         </div>
 
         <div class="content" id="content">
@@ -169,7 +169,7 @@
             displayContent();
         }
 
-        function switchTab(tab) {
+        function switchTab(tab, event) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
