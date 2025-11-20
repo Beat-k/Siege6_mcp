@@ -148,8 +148,8 @@ function showWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  // Register global hotkey (Ctrl+Alt+F12)
-  globalShortcut.register('CommandOrControl+Alt+F12', () => {
+  // Register global hotkey (Ctrl+Alt+F11)
+  globalShortcut.register('CommandOrControl+Alt+F11', () => {
     showWindow();
   });
 
@@ -170,7 +170,7 @@ app.whenReady().then(() => {
   });
 
   console.log('Siege6 Audio Reference is running!');
-  console.log('Press Ctrl+Alt+F12 to show/hide the reference window');
+  console.log('Press Ctrl+Alt+F11 to show/hide the reference window');
 });
 
 app.on('window-all-closed', (event) => {
