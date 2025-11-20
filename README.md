@@ -6,13 +6,11 @@ A comprehensive audio reference system for Rainbow Six Siege that provides insta
 
 ### Desktop App (Recommended for In-Game Use)
 
-1. Navigate to the `desktop-app` folder
-2. Install dependencies: `npm install`
-3. Start the app: `npm start`
-4. The app runs in the background
-5. Press `Ctrl+Alt+F11` during gameplay to instantly access audio references
-6. The reference window appears instantly with search functionality
-7. Press the hotkey again or click outside to hide
+1. Run `start_siege6.bat` to launch the app
+2. The app runs in the background
+3. Press `Ctrl+Alt+F11` during gameplay to instantly access audio references
+4. The reference window appears instantly with search functionality
+5. Press the hotkey again or click outside to hide
 
 **Status**: ✅ Working - No freezing, global hotkey functional, search enabled
 
@@ -59,6 +57,8 @@ cd desktop-app
 npm install
 npm start
 ```
+
+Or simply double-click `start_siege6.bat` to launch the app.
 
 ### Building for Distribution
 
