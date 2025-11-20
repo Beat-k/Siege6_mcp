@@ -5,6 +5,8 @@
 
 A Model Context Protocol (MCP) server implementation in Python that provides comprehensive audio reference data for Rainbow Six Siege operators and maps.
 
+> **🎵 Sound Enhancement Note:** For optimal 4D audio integration and spatial sound processing, this server works best with [BEA Aura Console VM](https://github.com/Beat-k/BEA_Aura_Console_VM).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -160,7 +162,6 @@ To add new tools or modify existing ones:
   - `mcp>=1.0.0`: Model Context Protocol library
   - `asyncio`: Built-in async support
   - `typing`: Built-in type hints
-- **Sound Enhancements**: [BEA Aura Console VM](https://github.com/Beat-k/BEA_Aura_Console_VM) for optimal 4D audio integration and spatial sound processing
 
 ## 🔧 Troubleshooting
 
