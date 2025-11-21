@@ -1,124 +1,60 @@
 #!/usr/bin/env python3
 """
-Siege6 MCP Server - Python Implementation
-A Model Context Protocol server for Rainbow Six Siege audio references
+Siege6 MCP Server - Enhanced Audio Edition
+A Model Context Protocol server for Rainbow Six Siege with real spatial audio processing
 """
 
 import asyncio
 import sys
+import json
 from typing import Any, Sequence
 from mcp import Tool
 from mcp.server import Server
 from mcp.types import TextContent, PromptMessage, ListToolsRequest, CallToolRequest
 
+# Import enhanced audio backend system
+from audio_backend import (
+    AudioBackendType,
+    SpatialPosition,
+    get_backend_manager
+)
+from enhanced_audio_data import (
+    get_operator_audio_metadata,
+    list_operators,
+    list_maps,
+    ENHANCED_OPERATOR_AUDIO,
+    ENHANCED_MAP_AUDIO
+)
+
+# Try to import optional backends
+try:
+    from backend_openal import OpenALBackend
+    OPENAL_AVAILABLE = True
+except ImportError:
+    OPENAL_AVAILABLE = False
+
+try:
+    from backend_windows_spatial import WindowsSpatialBackend
+    WINDOWS_SPATIAL_AVAILABLE = True
+except ImportError:
+    WINDOWS_SPATIAL_AVAILABLE = False
+
 # Initialize the server
-server = Server("siege6-mcp")
+server = Server("siege6-mcp-enhanced")
 
-# Operator footsteps data
-OPERATOR_FOOTSTEPS = {
-    "Ash": "Light, quick footsteps with a slight metallic echo from her boots",
-    "Thermite": "Heavy, deliberate footsteps with gear rattling",
-    "Sledge": "Loud, thudding footsteps from his hammer boots",
-    "Thatcher": "Steady, confident footsteps with equipment clinking",
-    "Smoke": "Heavy footsteps with gas canister sounds",
-    "Mute": "Quiet, muffled footsteps due to his jammer",
-    "Castle": "Armored footsteps with shield movement",
-    "Pulse": "Light footsteps with heartbeat sensor beeps",
-    "Doc": "Medical gear footsteps with stim pistol sounds",
-    "Rook": "Heavy armored footsteps with armor plates",
-    "Twitch": "Light footsteps with drone whirring",
-    "Montagne": "Very heavy, clanking armored footsteps",
-    "Glaz": "Stealthy, quiet footsteps",
-    "Fuze": "Heavy footsteps with cluster charge beeps",
-    "Kapkan": "Cautious footsteps with trap setting sounds",
-    "Tachanka": "Heavy machine gun footsteps",
-    "Jäger": "Light footsteps with ADS activation",
-    "Bandit": "Electric footsteps with battery hum",
-    "Blitz": "Armored footsteps with flash shield",
-    "IQ": "Light footsteps with scanner beeps",
-    "Frost": "Welsh-accented footsteps with trap sounds",
-    "Buck": "Skeleton-themed heavy footsteps",
-    "Blackbeard": "Shotgun footsteps with shield sounds",
-    "Valkyrie": "Light footsteps with camera drones",
-    "Capitao": "Heavy footsteps with fire effects",
-    "Caveira": "Silent, stealthy footsteps",
-    "Hibana": "Light footsteps with X-Kairos beeps",
-    "Echo": "Light footsteps with Yokai drone",
-    "Jackal": "Tracking footsteps with device sounds",
-    "Mira": "Armored footsteps with mirror sounds",
-    "Lesion": "Poisonous footsteps with trap activation",
-    "Ela": "Concussion footsteps with mine beeps",
-    "Ying": "Light footsteps with candela sounds",
-    "Dokkaebi": "Hacking footsteps with phone sounds",
-    "Vigil": "Silent ERC-7 footsteps",
-    "Zofia": "Heavy footsteps with concussion effects",
-    "Lion": "Tracking footsteps with EE-ONE-D beeps",
-    "Finka": "Adrenal footsteps with stim sounds",
-    "Alibi": "Hologram footsteps with projector hum",
-    "Maestro": "Armored footsteps with Evil Eye camera",
-    "Nomad": "Airjab footsteps with launcher sounds",
-    "Kaid": "Heavy armored footsteps with electroclaws",
-    "Clash": "CCE shield footsteps with electric discharge",
-    "Maverick": "Heavy footsteps with blowtorch sounds",
-    "Gridlock": "Trax footsteps with stun effects",
-    "Mozzie": "Drone footsteps with pest sounds",
-    "Nøkk": "Silent HEL footsteps",
-    "Warden": "Light footsteps with Glance Smart Glasses",
-    "Goyo": "Volcan footsteps with fire sounds",
-    "Amaru": "Grappling hook footsteps",
-    "Wamai": "Magnet footsteps with trap sounds",
-    "Kali": "Heavy footsteps with CSRX 300 sounds",
-    "Osa": "Hologram footsteps with Talon-8",
-    "Zero": "Drone footsteps with Argus camera",
-    "Ace": "Heavy footsteps with SELMA sounds",
-    "Iana": "Hologram footsteps with Gemini Replicator",
-    "Aruni": "Surya footsteps with gate sounds",
-    "Melusi": "Banshee footsteps with sonic effects",
-    "Oryx": "Heavy armored footsteps with Remah Dash",
-    "Thunderbird": "Healing footsteps with Kóna Station",
-    "Flores": "RCE-Ratero footsteps with drone sounds",
-    "Azami": "Kiba footsteps with barrier sounds",
-    "Sens": "POF-9 footsteps with recon drone",
-    "Grim": "Kawan Hive footsteps with swarm sounds",
-    "Solis": "SPEC-IO footsteps with electrocution",
-    "Deimos": "Nightmare footsteps with aura effects",
-    "Tubarao": "Heavy footsteps with Mosquid Ink",
-    "Fenrir": "Fenrir footsteps with F-NATT Dread Mine",
-    "Sentry": "K9 footsteps with drone sounds",
-    "Toro": "Breaching footsteps with Breaching Torch",
-    "Brava": "Kludge footsteps with drone sounds",
-    "Ram": "BU-GI footsteps with explosive effects",
-    "Brimstone": "Stim Pistol footsteps with healing sounds"
-}
+# Initialize backend manager and register available backends
+backend_manager = get_backend_manager()
 
-# Map spatial sounds data
-MAP_SPATIAL_SOUNDS = {
-    "Bank": "Urban environment with distant traffic, occasional car horns, bank alarms, and echoing footsteps in marble halls",
-    "Border": "Rural border sounds with wind, distant vehicles, construction noise, and open space echoes",
-    "Chalet": "Mountain chalet with wind howling, creaking wood, fireplace crackling, and snow crunching",
-    "Clubhouse": "Indoor club with muffled music, pool table sounds, bar ambiance, and close-quarters echoes",
-    "Coastline": "Beach sounds with waves crashing, seagull cries, wind through palm trees, and boat engines",
-    "Consulate": "Diplomatic building with air conditioning hum, typing sounds, phone rings, and formal atmosphere",
-    "Emerald Plains": "Rural farm sounds with wind through crops, animal noises, tractor engines, and open field echoes",
-    "Favela": "Urban slum with distant traffic, people talking in Portuguese, construction, and narrow alley echoes",
-    "Fortress": "Military base with wind, distant gunfire echoes, helicopter sounds, and concrete structure ambiance",
-    "Hereford Base": "Training facility with wind, distant explosions, radio chatter, and military equipment sounds",
-    "House": "Residential sounds with wind, creaking doors, household appliances, and room-to-room echoes",
-    "Kafe Dostoyevsky": "Restaurant with Russian chatter, cooking sounds, music, and indoor dining ambiance",
-    "Kanal": "Underground canal with dripping water, echoing footsteps, distant machinery, and claustrophobic reverb",
-    "Lair": "Underground bunker with ventilation hum, distant machinery, water dripping, and confined space echoes",
-    "Nighthaven Labs": "Laboratory with ventilation systems, computer hum, chemical sounds, and sterile environment",
-    "Oregon": "Rural farmhouse with wind, creaking wood, distant traffic, and open layout echoes",
-    "Outback": "Australian outback with wind, animal calls, distant thunder, and vast open space",
-    "Plane": "Aircraft interior with engine hum, wind turbulence, cabin pressure sounds, and metal structure",
-    "Presidential Plane": "Luxury aircraft with engine noise, wind, formal ambiance, and high-altitude sounds",
-    "Skyscraper": "High-rise building with wind howling, elevator sounds, office ambiance, and height-induced echoes",
-    "Stadium (Brazil)": "Sports stadium with wind, distant crowd murmurs, announcer echoes, and large space reverb",
-    "Theme Park": "Amusement park with wind, distant rides, music, and festive atmosphere",
-    "Tower": "Communications tower with strong wind, antenna hum, electrical sounds, and height exposure",
-    "Villa": "Luxury villa with wind through gardens, fountain sounds, distant traffic, and opulent ambiance",
-    "Yacht": "Boat with water lapping, wind, engine hum, and maritime environment"
-}
+if OPENAL_AVAILABLE:
+    backend_manager.register_backend(OpenALBackend())
+    print("OpenAL backend registered", file=sys.stderr)
+
+if WINDOWS_SPATIAL_AVAILABLE:
+    backend_manager.register_backend(WindowsSpatialBackend())
+    print("Windows Spatial Sound backend registered", file=sys.stderr)
+
+print(f"Active backend: {backend_manager.get_active_backend().get_backend_info()['name']}", file=sys.stderr)
+
 
 @server.list_tools()
 async def list_tools() -> list[Tool]:
@@ -126,7 +62,21 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="get_operator_footsteps",
-            description="Get information about operator footsteps sounds in Rainbow Six Siege",
+            description="Get basic information about operator footsteps sounds in Rainbow Six Siege",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "description": "Name of the operator (e.g., 'Ash', 'Thermite')"
+                    }
+                },
+                "required": ["operator"]
+            }
+        ),
+        Tool(
+            name="get_operator_audio_metadata",
+            description="Get enhanced audio metadata for an operator including frequency range, volume, spatial characteristics, and special audio cues",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -140,7 +90,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="get_map_spatial_sounds",
-            description="Get information about spatial background sounds on a map",
+            description="Get basic information about spatial background sounds on a map",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -150,6 +100,100 @@ async def list_tools() -> list[Tool]:
                     }
                 },
                 "required": ["map"]
+            }
+        ),
+        Tool(
+            name="get_map_audio_metadata",
+            description="Get enhanced audio metadata for a map including ambient sounds, reverb characteristics, and spatial zones",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "map": {
+                        "type": "string",
+                        "description": "Name of the map (e.g., 'Bank', 'Clubhouse')"
+                    },
+                    "zone": {
+                        "type": "string",
+                        "description": "Optional zone filter (e.g., 'lobby', 'exterior', 'all')",
+                        "default": "all"
+                    }
+                },
+                "required": ["map"]
+            }
+        ),
+        Tool(
+            name="process_spatial_audio",
+            description="Process audio with 3D spatial positioning using the active audio backend (OpenAL, Windows Spatial Sound, etc.)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "operator": {
+                        "type": "string",
+                        "description": "Name of the operator making the sound"
+                    },
+                    "source_position": {
+                        "type": "object",
+                        "description": "3D position of the sound source (x, y, z)",
+                        "properties": {
+                            "x": {"type": "number"},
+                            "y": {"type": "number"},
+                            "z": {"type": "number"}
+                        },
+                        "required": ["x", "y", "z"]
+                    },
+                    "listener_position": {
+                        "type": "object",
+                        "description": "3D position of the listener (player) (x, y, z)",
+                        "properties": {
+                            "x": {"type": "number"},
+                            "y": {"type": "number"},
+                            "z": {"type": "number"}
+                        },
+                        "required": ["x", "y", "z"]
+                    },
+                    "listener_orientation": {
+                        "type": "object",
+                        "description": "Orientation of the listener (yaw, pitch, roll in degrees)",
+                        "properties": {
+                            "yaw": {"type": "number"},
+                            "pitch": {"type": "number"},
+                            "roll": {"type": "number"}
+                        },
+                        "required": ["yaw", "pitch", "roll"]
+                    }
+                },
+                "required": ["operator", "source_position", "listener_position", "listener_orientation"]
+            }
+        ),
+        Tool(
+            name="configure_audio_backend",
+            description="Switch to a different audio backend (openal, windows_spatial, none)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "backend": {
+                        "type": "string",
+                        "description": "Backend type: 'openal', 'windows_spatial', or 'none'",
+                        "enum": ["openal", "windows_spatial", "none"]
+                    }
+                },
+                "required": ["backend"]
+            }
+        ),
+        Tool(
+            name="list_audio_backends",
+            description="List all available audio backends on this system",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        ),
+        Tool(
+            name="get_backend_capabilities",
+            description="Get capabilities of the currently active audio backend",
+            inputSchema={
+                "type": "object",
+                "properties": {}
             }
         ),
         Tool(
@@ -170,40 +214,188 @@ async def list_tools() -> list[Tool]:
         )
     ]
 
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Handle tool calls."""
+
     if name == "get_operator_footsteps":
         operator = arguments.get("operator")
-        result = OPERATOR_FOOTSTEPS.get(operator)
-        if result:
-            return [TextContent(type="text", text=f"Operator {operator}: {result}")]
+        if operator in ENHANCED_OPERATOR_AUDIO:
+            description = ENHANCED_OPERATOR_AUDIO[operator]["description"]
+            return [TextContent(type="text", text=f"Operator {operator}: {description}")]
         else:
             return [TextContent(type="text", text=f"No footsteps data available for operator: {operator}")]
-    
+
+    elif name == "get_operator_audio_metadata":
+        operator = arguments.get("operator")
+        if operator in ENHANCED_OPERATOR_AUDIO:
+            data = ENHANCED_OPERATOR_AUDIO[operator]
+            result = {
+                "operator": operator,
+                "description": data["description"],
+                "audio_properties": {
+                    "frequency_range_hz": {"low": data["frequency_range"][0], "high": data["frequency_range"][1]},
+                    "volume_db": data["volume_db"],
+                    "spatial_falloff": data["spatial_falloff"],
+                    "reverb_amount": data["reverb_amount"],
+                    "occlusion_factor": data["occlusion_factor"],
+                    "directional": data["directional"]
+                },
+                "gameplay_properties": {
+                    "speed_multiplier": data["speed_multiplier"],
+                    "armor_rating": data["armor_rating"]
+                },
+                "special_audio_cues": data["special_audio_cues"]
+            }
+            return [TextContent(type="text", text=json.dumps(result, indent=2))]
+        else:
+            return [TextContent(type="text", text=f"No audio metadata available for operator: {operator}")]
+
     elif name == "get_map_spatial_sounds":
         map_name = arguments.get("map")
-        result = MAP_SPATIAL_SOUNDS.get(map_name)
-        if result:
-            return [TextContent(type="text", text=f"Map {map_name}: {result}")]
+        if map_name in ENHANCED_MAP_AUDIO:
+            description = ENHANCED_MAP_AUDIO[map_name]["description"]
+            return [TextContent(type="text", text=f"Map {map_name}: {description}")]
         else:
             return [TextContent(type="text", text=f"No spatial sound data available for map: {map_name}")]
-    
+
+    elif name == "get_map_audio_metadata":
+        map_name = arguments.get("map")
+        zone = arguments.get("zone", "all")
+
+        if map_name in ENHANCED_MAP_AUDIO:
+            data = ENHANCED_MAP_AUDIO[map_name]
+            result = {
+                "map": map_name,
+                "description": data["description"],
+                "ambient_properties": {
+                    "frequency_range_hz": {"low": data["ambient_frequency_range"][0], "high": data["ambient_frequency_range"][1]},
+                    "ambient_volume_db": data["ambient_volume_db"]
+                },
+                "reverb_characteristics": data["reverb_characteristics"],
+                "spatial_zones": data["spatial_zones"],
+                "ambient_sounds": []
+            }
+
+            # Add ambient sounds for the requested zone
+            for ambient in data.get("ambient_sounds", []):
+                if zone == "all" or ambient["position"] == zone or ambient["position"] == "all":
+                    result["ambient_sounds"].append(ambient)
+
+            return [TextContent(type="text", text=json.dumps(result, indent=2))]
+        else:
+            return [TextContent(type="text", text=f"No audio metadata available for map: {map_name}")]
+
+    elif name == "process_spatial_audio":
+        operator = arguments.get("operator")
+        source_pos = arguments.get("source_position")
+        listener_pos = arguments.get("listener_position")
+        listener_orient = arguments.get("listener_orientation")
+
+        # Get operator audio metadata
+        audio_metadata = get_operator_audio_metadata(operator)
+
+        # Set source position
+        audio_metadata.position = SpatialPosition(
+            x=source_pos["x"],
+            y=source_pos["y"],
+            z=source_pos["z"]
+        )
+
+        # Create listener position
+        listener_position = SpatialPosition(
+            x=listener_pos["x"],
+            y=listener_pos["y"],
+            z=listener_pos["z"]
+        )
+
+        # Create orientation tuple
+        orientation = (
+            listener_orient["yaw"],
+            listener_orient["pitch"],
+            listener_orient["roll"]
+        )
+
+        # Process with active backend
+        result = backend_manager.get_active_backend().process_spatial_audio(
+            audio_metadata,
+            listener_position,
+            orientation
+        )
+
+        output = {
+            "operator": operator,
+            "success": result.success,
+            "message": result.message,
+            "processed_audio": result.processed_audio,
+            "backend": result.backend_info
+        }
+
+        return [TextContent(type="text", text=json.dumps(output, indent=2))]
+
+    elif name == "configure_audio_backend":
+        backend_str = arguments.get("backend")
+
+        # Map string to enum
+        backend_map = {
+            "openal": AudioBackendType.OPENAL,
+            "windows_spatial": AudioBackendType.WINDOWS_SPATIAL,
+            "none": AudioBackendType.NONE
+        }
+
+        backend_type = backend_map.get(backend_str)
+        if backend_type is None:
+            return [TextContent(type="text", text=f"Unknown backend: {backend_str}")]
+
+        success = backend_manager.set_active_backend(backend_type)
+
+        if success:
+            info = backend_manager.get_active_backend().get_backend_info()
+            return [TextContent(type="text", text=f"Successfully switched to: {info['name']}\n{json.dumps(info, indent=2)}")]
+        else:
+            return [TextContent(type="text", text=f"Failed to switch to backend: {backend_str}. Backend may not be available on this system.")]
+
+    elif name == "list_audio_backends":
+        backends = backend_manager.list_available_backends()
+        result = {
+            "available_backends": backends,
+            "active_backend": backend_manager.get_active_backend().get_backend_info()
+        }
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+    elif name == "get_backend_capabilities":
+        capabilities = backend_manager.get_backend_capabilities()
+        backend_info = backend_manager.get_active_backend().get_backend_info()
+        result = {
+            "backend": backend_info,
+            "capabilities": capabilities
+        }
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
     elif name == "list_operators":
-        return [TextContent(type="text", text=", ".join(sorted(OPERATOR_FOOTSTEPS.keys())))]
-    
+        operators = list_operators()
+        return [TextContent(type="text", text=", ".join(operators))]
+
     elif name == "list_maps":
-        return [TextContent(type="text", text=", ".join(sorted(MAP_SPATIAL_SOUNDS.keys())))]
-    
+        maps = list_maps()
+        return [TextContent(type="text", text=", ".join(maps))]
+
     else:
         raise ValueError(f"Unknown tool: {name}")
 
+
 async def main():
     """Main entry point for the MCP server."""
-    # Import here to avoid issues if mcp is not installed
     from mcp.server.stdio import stdio_server
 
-    print("Siege6 MCP server (Python) running on stdio", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print("Siege6 MCP Enhanced Audio Server", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+    print(f"Active Backend: {backend_manager.get_active_backend().get_backend_info()['name']}", file=sys.stderr)
+    print(f"Operators: {len(list_operators())}", file=sys.stderr)
+    print(f"Maps: {len(list_maps())}", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
@@ -211,6 +403,7 @@ async def main():
             write_stream,
             server.create_initialization_options()
         )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

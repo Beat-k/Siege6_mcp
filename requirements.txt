@@ -1,3 +1,14 @@
+# Core MCP dependencies
 mcp>=1.0.0
-asyncio
-typing
+
+# Optional audio backend dependencies
+# Install these for enhanced spatial audio support
+
+# OpenAL backend (cross-platform 3D audio)
+# Uncomment to use OpenAL backend:
+# PyOpenAL>=0.7.5
+
+# Windows Spatial Sound backend (Windows only)
+# Built-in to Python on Windows, no additional packages needed
+
+# Note: asyncio and typing are built-in to Python 3.8+
